@@ -1,87 +1,232 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+/// Flutter code sample for [ListTile] selection in a [ListView] or [GridView].
 
-  await Supabase.initialize(
-    url: "https://tnxjgdzsvffqubrattzm.supabase.co",
-    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRueGpnZHpzdmZmcXVicmF0dHptIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODY3MjM2OTEsImV4cCI6MjAwMjI5OTY5MX0.ONb25YSgrApJISU3ix34nIg7zsTrIC39gkPioEwwj14",
-  );
-  runApp(const MyWidget());
-}
+// void main() => runApp(const ListViewExampleApp());
 
-class MyWidget extends StatelessWidget {
-  const MyWidget({super.key});
+class ListViewExampleApp extends StatelessWidget {
+  const ListViewExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MyWidget',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const Home1(title: 'MyWidget'),
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ListTileSelectExample(),
     );
   }
 }
 
-class Home1 extends StatefulWidget {
-  const Home1 ({super.key, required this.title});
-
-  final String title;
+class ListTileSelectExample extends StatefulWidget {
+  const ListTileSelectExample({super.key});
 
   @override
-  State<Home1> createState() => _Home1State();
+  ListTileSelectExampleState createState() => ListTileSelectExampleState();
 }
 
-class _Home1State extends State<Home1> {
+class ListTileSelectExampleState extends State<ListTileSelectExample> {
+  bool isSelectionMode = false;
+  final int listLength = 30;
+  late List<bool> _selected;
+  bool _selectAll = false;
+  bool _isGridMode = false;
 
-  final _notesStream = Supabase.instance.client.from('flutter_notes').stream(primaryKey: ['id']);
+  @override
+  void initState() {
+    super.initState();
+    initializeSelection();
+  }
+
+  void initializeSelection() {
+    _selected = List<bool>.generate(listLength, (_) => false);
+  }
+
+  @override
+  void dispose() {
+    _selected.clear();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _notesStream,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final notes = snapshot.data!;
-
-          return ListView.builder(
-            itemCount: notes.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(notes[index]['body']),
-              );
-            }
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(context: context, builder: ((context) {
-            return SimpleDialog(
-              title: const Text('Dialog'),
-              children: [
-                TextFormField(
-                  onFieldSubmitted: (value) async {
-                    await Supabase.instance.client.from('flutter_notes').insert(
-                      {'body': value});
+        appBar: AppBar(
+          title: const Text(
+            'ListTile selection',
+          ),
+          leading: isSelectionMode
+              ? IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      isSelectionMode = false;
+                    });
+                    initializeSelection();
                   },
                 )
-              ],
-            );
-          }));
-        },
-        child: const Icon(Icons.add),
-      ),
-    );
+              : const SizedBox(),
+          actions: <Widget>[
+            if (_isGridMode)
+              IconButton(
+                icon: const Icon(Icons.grid_on),
+                onPressed: () {
+                  setState(() {
+                    _isGridMode = false;
+                  });
+                },
+              )
+            else
+              IconButton(
+                icon: const Icon(Icons.list),
+                onPressed: () {
+                  setState(() {
+                    _isGridMode = true;
+                  });
+                },
+              ),
+            if (isSelectionMode)
+              TextButton(
+                  child: !_selectAll
+                      ? const Text(
+                          'select all',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      : const Text(
+                          'unselect all',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                  onPressed: () {
+                    _selectAll = !_selectAll;
+                    setState(() {
+                      _selected =
+                          List<bool>.generate(listLength, (_) => _selectAll);
+                    });
+                  }),
+          ],
+        ),
+        body: _isGridMode
+            ? GridBuilder(
+                isSelectionMode: isSelectionMode,
+                selectedList: _selected,
+                onSelectionChange: (bool x) {
+                  setState(() {
+                    isSelectionMode = x;
+                  });
+                },
+              )
+            : ListBuilder(
+                isSelectionMode: isSelectionMode,
+                selectedList: _selected,
+                onSelectionChange: (bool x) {
+                  setState(() {
+                    isSelectionMode = x;
+                  });
+                },
+              ));
+  }
+}
+
+class GridBuilder extends StatefulWidget {
+  const GridBuilder({
+    super.key,
+    required this.selectedList,
+    required this.isSelectionMode,
+    required this.onSelectionChange,
+  });
+
+  final bool isSelectionMode;
+  final Function(bool)? onSelectionChange;
+  final List<bool> selectedList;
+
+  @override
+  GridBuilderState createState() => GridBuilderState();
+}
+
+class GridBuilderState extends State<GridBuilder> {
+  void _toggle(int index) {
+    if (widget.isSelectionMode) {
+      setState(() {
+        widget.selectedList[index] = !widget.selectedList[index];
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+        itemCount: widget.selectedList.length,
+        gridDelegate:
+            const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
+        itemBuilder: (_, int index) {
+          return InkWell(
+            onTap: () => _toggle(index),
+            onLongPress: () {
+              if (!widget.isSelectionMode) {
+                setState(() {
+                  widget.selectedList[index] = true;
+                });
+                widget.onSelectionChange!(true);
+              }
+            },
+            child: GridTile(
+                child: Container(
+              child: widget.isSelectionMode
+                  ? Checkbox(
+                      onChanged: (bool? x) => _toggle(index),
+                      value: widget.selectedList[index])
+                  : const Icon(Icons.image),
+            )),
+          );
+        });
+  }
+}
+
+class ListBuilder extends StatefulWidget {
+  const ListBuilder({
+    super.key,
+    required this.selectedList,
+    required this.isSelectionMode,
+    required this.onSelectionChange,
+  });
+
+  final bool isSelectionMode;
+  final List<bool> selectedList;
+  final Function(bool)? onSelectionChange;
+
+  @override
+  State<ListBuilder> createState() => _ListBuilderState();
+}
+
+class _ListBuilderState extends State<ListBuilder> {
+  void _toggle(int index) {
+    if (widget.isSelectionMode) {
+      setState(() {
+        widget.selectedList[index] = !widget.selectedList[index];
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+        itemCount: widget.selectedList.length,
+        itemBuilder: (_, int index) {
+          return ListTile(
+              onTap: () => _toggle(index),
+              onLongPress: () {
+                if (!widget.isSelectionMode) {
+                  setState(() {
+                    widget.selectedList[index] = true;
+                  });
+                  widget.onSelectionChange!(true);
+                }
+              },
+              trailing: widget.isSelectionMode
+                  ? Checkbox(
+                      value: widget.selectedList[index],
+                      onChanged: (bool? x) => _toggle(index),
+                    )
+                  : const SizedBox.shrink(),
+              title: Text('item $index'));
+        });
   }
 }
