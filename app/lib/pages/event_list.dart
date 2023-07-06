@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app/db/supabase.dart';
-
-import 'event_details.dart';
+import 'package:go_router/go_router.dart';
 
 class EventList extends StatelessWidget {
   const EventList({super.key});
@@ -28,30 +27,28 @@ class EventListElements extends StatefulWidget {
 
 class _EventListElementsState extends State<EventListElements> {
   
-  final _notesStream = supabase.from('events').stream(primaryKey: ['id']);
+  final _dataStream = supabase.from('events').stream(primaryKey: ['id']);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _notesStream,
+        stream: _dataStream,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final notes = snapshot.data!;
+          final events = snapshot.data!;
       
           return ListView.builder(
-            itemCount: notes.length,
+            itemCount: events.length,
             itemBuilder: (context, index) {
+              final event = events[index];
               return ListTile(
                 title: Text(
-                  notes[index]['id']
+                  event['id']
                   ),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EventDetails(id: notes[index]['id'])),
-                  );
+                  GoRouter.of(context).go('/event/${event['id']}');
                 },
               );
             }

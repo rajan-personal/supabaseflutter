@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:app/db/supabase.dart';
+import 'fullscreen_image.dart';
 
 class EventDetails extends StatefulWidget {
   const EventDetails({super.key, required this.id});
 
-  final String id;
-
+  final String? id;
+ 
   @override
   State<EventDetails> createState() => _EventDetailsState();
 }
 
 class _EventDetailsState extends State<EventDetails> {
 
-  late Future<List?> test;
+  late Future<List?> data;
   
   Future<List?> getData() async {
-    final  result = await supabase.from('events').select().eq('id', widget.id);
-    return result;
+    final data = await supabase.from('links').select().eq('event_id', widget.id);
+    return data;
+  }
+
+  Image getImage(String url) {
+    return Image.network(url);
   }
 
   @override
   void initState() {
-    test = getData();
+    data = getData();
     super.initState();
   }
 
@@ -32,13 +37,36 @@ class _EventDetailsState extends State<EventDetails> {
         title: const Text('Event Details'),
       ),
       body: FutureBuilder<List?>(
-        future: test,
+        future: data,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final notes = snapshot.data!;
-          return Text(notes[0]['title']);
+          final links = snapshot.data!;
+          return GridView.builder(
+            itemCount: links.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4), 
+            itemBuilder: (_, int index) {
+              final link = links[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => FullscreenImage(url: link['url'])),
+                  );
+                },
+                child: Card(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: getImage(link['url']),
+                      )
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
         },
       )
     );
