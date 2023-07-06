@@ -8,7 +8,6 @@ DROP TABLE IF EXISTS events;
 CREATE TABLE events (
   id UUID UNIQUE DEFAULT uuid_generate_v4(),
   title VARCHAR(64) NOT NULL,
-  location VARCHAR(255),
   description TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
@@ -37,9 +36,9 @@ CREATE TABLE links (
 );
 
 INSERT INTO events (title, location, description) VALUES
-('Django Meetup', 'San Francisco, CA', 'A monthly meetup for Django developers'),
-('Python Conference', 'New York, NY', 'A two-day conference for Pythonistas'),
-('Flask Workshop', 'Austin, TX', 'A one-day workshop on Flask');
+('Django Meetup', 'A monthly meetup for Django developers'),
+('Python Conference', 'A two-day conference for Pythonistas'),
+('Flask Workshop', 'A one-day workshop on Flask');
 
 
 INSERT INTO members (user_id, event_id, acl) VALUES
