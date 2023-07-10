@@ -35,6 +35,53 @@ CREATE TABLE links (
   PRIMARY KEY (id)
 );
 
+CREATE OR REPLACE FUNCTION event_list_acl()
+RETURNS table(
+  id uuid
+) AS $$
+BEGIN
+  RETURN QUERY SELECT event_id FROM members WHERE user_id = auth.uid();
+END;
+$$ LANGUAGE plpgsql
+SECURITY DEFINER;
+
+CREATE POLICY "select allowed events" ON "public"."events"
+AS PERMISSIVE FOR SELECT
+TO public
+USING (id in (select * from event_list_acl()));
+
+CREATE POLICY "select allowed members" ON "public"."members"
+AS PERMISSIVE FOR SELECT
+TO public
+USING (event_id IN ( SELECT id FROM events));
+
+CREATE POLICY "select allowed event links" ON "public"."links"
+AS PERMISSIVE FOR SELECT
+TO public
+USING (event_id IN ( SELECT id FROM events));
+
+CREATE OR REPLACE function add_user_on_event_insert()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into members (user_id, event_id, acl) values (auth.uid(), new.id, 'admin');
+  RETURN new;
+end;
+$$;
+
+CREATE OR REPLACE TRIGGER add_user_on_event_insert
+AFTER INSERT
+ON events
+FOR EACH ROW
+EXECUTE PROCEDURE add_user_on_event_insert();
+
+alter table events enable row level security;
+alter table members enable row level security;
+alter table links enable row level security;
+
+
 INSERT INTO events (title, location, description) VALUES
 ('Django Meetup', 'A monthly meetup for Django developers'),
 ('Python Conference', 'A two-day conference for Pythonistas'),
@@ -53,3 +100,22 @@ INSERT INTO links (user_id, event_id, url) VALUES
 ('398d9b8d-7966-4de3-842f-d12954db79d3'::UUID, 'ead8f308-f0a1-423e-a47f-126cc6988cbf'::UUID, 'https://www.python.org/'),
 ('398d9b8d-7966-4de3-842f-d12954db79d3'::UUID, 'ead8f308-f0a1-423e-a47f-126cc6988cbf'::UUID, 'https://flask.palletsprojects.com/');
 
+read:
+  - event
+  - members
+  - links
+
+create:
+  - event
+  - members
+  - links
+
+update:
+  - event
+  - members
+
+delete:
+  - members
+
+deactivate:
+  - links

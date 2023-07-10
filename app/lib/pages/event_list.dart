@@ -48,12 +48,19 @@ class _EventListElementsState extends State<EventListElements> {
                   event['id']
                   ),
                 onTap: () {
-                  GoRouter.of(context).go('/event/${event['id']}');
+                  GoRouter.of(context).go('/events/${event['id']}');
                 },
               );
             }
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // TODO: Add new event
+          // GoRouter.of(context).go('/events/new');
+        },
+        child: const Icon(Icons.add),
       )
     );
   }

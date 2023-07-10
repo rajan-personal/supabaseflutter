@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:app/db/supabase.dart';
 import 'fullscreen_image.dart';
@@ -68,6 +69,22 @@ class _EventDetailsState extends State<EventDetails> {
             },
           );
         },
+      ),
+      floatingActionButton: TextButton(
+        onPressed: () async {
+          final result = await FilePicker.platform.pickFiles(
+            type: FileType.image,
+            allowMultiple: true,
+          );
+          if (result != null) {
+            final files = result.files;
+            for (var file in files) {
+              print(file.size);
+              // TODO: Upload file to Supabase Storage
+            }
+          }
+        },
+        child: const Text('Add Link'),
       )
     );
   }
