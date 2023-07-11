@@ -55,6 +55,11 @@ AS PERMISSIVE FOR SELECT
 TO public
 USING (event_id IN ( SELECT id FROM events));
 
+CREATE POLICY "new event insert" ON "public"."events"
+AS PERMISSIVE FOR INSERT
+TO authenticated
+WITH CHECK (true)
+
 CREATE POLICY "select allowed event links" ON "public"."links"
 AS PERMISSIVE FOR SELECT
 TO public

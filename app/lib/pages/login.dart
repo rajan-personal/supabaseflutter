@@ -33,9 +33,7 @@ class Login extends StatelessWidget {
       ),
       body: Center(
         child: ElevatedButton(
-          onPressed: () async {
-            await supabase.auth.signInWithOAuth(Provider.google);
-          },
+          onPressed: () async => await supabase.auth.signInWithOAuth(Provider.google),
           child: const Text('Sign in with Google'),
         ),
       ),

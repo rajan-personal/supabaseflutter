@@ -1,6 +1,7 @@
 import 'package:app/pages/event_details.dart';
 import 'package:app/pages/event_list.dart';
 import 'package:app/pages/login.dart';
+import 'package:app/pages/new_event.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -31,18 +32,28 @@ class Home extends StatelessWidget {
 final GoRouter _router = GoRouter(
   routes: <RouteBase>[
     GoRoute(
+      name: 'login',
       path: '/',
       builder: (BuildContext context, GoRouterState state) {
         return const LoginPage();
       },
       routes: <RouteBase>[
         GoRoute(
+          name: 'new_event',
+          path: 'events/new',
+          builder: (BuildContext context, GoRouterState state) {
+            return const NewEvent();
+          },
+        ),
+        GoRoute(
+          name: 'events',
           path: 'events',
           builder: (BuildContext context, GoRouterState state) {
             return const EventList();
           },
         ),
         GoRoute(
+          name: 'event_details',
           path: 'events/:id',
           builder: (BuildContext context, GoRouterState state) {
             return EventDetails(id: state.pathParameters['id']);

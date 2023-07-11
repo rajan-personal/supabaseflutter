@@ -44,9 +44,7 @@ class _EventListElementsState extends State<EventListElements> {
             itemBuilder: (context, index) {
               final event = events[index];
               return ListTile(
-                title: Text(
-                  event['id']
-                  ),
+                title: Text(event['title']),
                 onTap: () {
                   GoRouter.of(context).go('/events/${event['id']}');
                 },
@@ -56,10 +54,7 @@ class _EventListElementsState extends State<EventListElements> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // TODO: Add new event
-          // GoRouter.of(context).go('/events/new');
-        },
+        onPressed: () async => GoRouter.of(context).go('/events/new'),
         child: const Icon(Icons.add),
       )
     );
